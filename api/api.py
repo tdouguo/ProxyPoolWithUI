@@ -2,7 +2,7 @@
 
 import os
 import logging
-from flask import Flask, jsonify, request, redirect, send_from_directory, session
+from flask import Flask, session, jsonify, request, redirect, send_from_directory, url_for
 from flask_session import Session
 from functools import wraps
 
@@ -25,12 +25,20 @@ app = Flask(
 )
 app.secret_key = os.getenv('JWT_TOKEN', 'Nbfdc@2024')
 VALID_TOKEN = os.getenv('WEB_TOKEN', 'nbfdc')
+app.config['SESSION_TYPE'] = 'filesystem'
+session_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'flask_session')
+if not os.path.exists(session_dir):
+    os.makedirs(session_dir)
+app.config['SESSION_FILE_DIR'] = session_dir
 Session(app)
+
+
 ############# 登录鉴权 ################
 def require_token(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
         # Check session for existing token authorization
+        print("Session: ", session)  # 打印 session 以查看状态
         if session.get('authorized'):
             return func(*args, **kwargs)
 
