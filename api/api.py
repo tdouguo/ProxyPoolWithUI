@@ -51,6 +51,7 @@ def require_token(func):
             return redirect(url_for('login'))  # Redirect to login page if not authorized
     return wrapper
 
+@app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         token = request.form.get('token')
