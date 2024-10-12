@@ -31,7 +31,7 @@ def ping():
     return 'API OK'
 
 # 随机获取一个可用代理，如果没有可用代理则返回空白
-@app.route('/fetch_random', methods=['GET'])
+@app.route('/api/fetch_random', methods=['GET'])
 def fetch_random():
     proxies = conn.getValidatedRandom(1)
     if len(proxies) > 0:
@@ -43,7 +43,7 @@ def fetch_random():
 ############# 新增加接口int ################        
 
 #api 获取协议为http的一条结果
-@app.route('/fetch_http', methods=['GET'])
+@app.route('/api/fetch_http', methods=['GET'])
 def fetch_http():
     proxies =conn.get_by_protocol('http', 1)
     if len(proxies) > 0:
@@ -53,7 +53,7 @@ def fetch_http():
         return ''
 
 #api 获取协议为http的全部结果
-@app.route('/fetch_http_all', methods=['GET'])
+@app.route('/api/fetch_http_all', methods=['GET'])
 def fetch_http_all():
     proxies = conn.get_by_protocol('http', -1)
     if len(proxies) == 1:
@@ -68,7 +68,7 @@ def fetch_http_all():
         return ''
         
 #api 获取协议为https的一条结果
-@app.route('/fetch_https', methods=['GET'])
+@app.route('/api/fetch_https', methods=['GET'])
 def fetch_https():
     proxies =conn.get_by_protocol('https', 1)
     if len(proxies) > 0:
@@ -78,7 +78,7 @@ def fetch_https():
         return ''
 
 #api 获取协议为https的全部结果
-@app.route('/fetch_https_all', methods=['GET'])
+@app.route('/api/fetch_https_all', methods=['GET'])
 def fetch_https_all():
     proxies = conn.get_by_protocol('https', -1)
     if len(proxies) == 1:
@@ -93,7 +93,7 @@ def fetch_https_all():
         return ''
                 
 #api 获取协议为http的一条结果
-@app.route('/fetch_socks4', methods=['GET'])
+@app.route('/api/fetch_socks4', methods=['GET'])
 def fetch_socks4():
     proxies =conn.get_by_protocol('socks4', 1)
     if len(proxies) > 0:
@@ -103,7 +103,7 @@ def fetch_socks4():
         return ''
 
 #api 获取协议为http的全部结果
-@app.route('/fetch_socks4_all', methods=['GET'])
+@app.route('/api/fetch_socks4_all', methods=['GET'])
 def fetch_socks4_all():
     proxies = conn.get_by_protocol('socks4', -1)
     if len(proxies) == 1:
@@ -118,7 +118,7 @@ def fetch_socks4_all():
         return ''
         
 #api 获取协议为https的一条结果
-@app.route('/fetch_socks5', methods=['GET'])
+@app.route('/api/fetch_socks5', methods=['GET'])
 def fetch_socks5():
     proxies =conn.get_by_protocol('socks5', 1)
     if len(proxies) > 0:
@@ -128,7 +128,7 @@ def fetch_socks5():
         return ''
 
 #api 获取协议为https的全部结果
-@app.route('/fetch_socks5_all', methods=['GET'])
+@app.route('/api/fetch_socks5_all', methods=['GET'])
 def fetch_socks5_all():
     proxies = conn.get_by_protocol('socks5', -1)
     if len(proxies) == 1:
@@ -145,7 +145,7 @@ def fetch_socks5_all():
 ############# 新增加接口end ################    
 
 # 获取所有可用代理，如果没有可用代理则返回空白
-@app.route('/fetch_all', methods=['GET'])
+@app.route('/api/fetch_all', methods=['GET'])
 def fetch_all():
     proxies = conn.getValidatedRandom(-1)
     proxies = [f'{p.protocol}://{p.ip}:{p.port}' for p in proxies]
@@ -157,20 +157,36 @@ def fetch_all():
 def index():
     return redirect('/web')
 
+VALID_TOKEN = os.getenv('VALID_TOKEN', 'nbfdc')
+
+def require_token(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        token = request.args.get('token')
+        if token == 'nbfdc':
+            return func(*args, **kwargs)
+        else:
+            return jsonify({'success': False, 'error': 'Forbidden ,请输入令牌'}), 400
+    return wrapper
+
+
 # 网页：首页
 @app.route('/web', methods=['GET'])
 @app.route('/web/', methods=['GET'])
+@require_token
 def page_index():
     return send_from_directory(STATIC_FOLDER, 'index.html')
 
 # 网页：爬取器状态
 @app.route('/web/fetchers', methods=['GET'])
 @app.route('/web/fetchers/', methods=['GET'])
+@require_token
 def page_fetchers():
     return send_from_directory(STATIC_FOLDER, 'fetchers/index.html')
 
 # 获取代理状态
 @app.route('/proxies_status', methods=['GET'])
+@require_token
 def proxies_status():
     proxies = conn.getValidatedRandom(-1)
     proxies = sorted(proxies, key=lambda p: f'{p.protocol}://{p.ip}:{p.port}', reverse=True)
@@ -186,6 +202,7 @@ def proxies_status():
 
 # 获取爬取器状态
 @app.route('/fetchers_status', methods=['GET'])
+@require_token
 def fetchers_status():
     proxies = conn.getValidatedRandom(-1) # 获取所有可用代理
     fetchers = conn.getAllFetchers()
@@ -202,12 +219,14 @@ def fetchers_status():
 
 # 清空爬取器状态
 @app.route('/clear_fetchers_status', methods=['GET'])
+@require_token
 def clear_fetchers_status():
     conn.pushClearFetchersStatus()
     return jsonify(dict(success=True))
 
 # 设置是否启用特定爬取器,?name=str,enable=0/1
 @app.route('/fetcher_enable', methods=['GET'])
+@require_token
 def fetcher_enable():
     name = request.args.get('name')
     enable = request.args.get('enable')
