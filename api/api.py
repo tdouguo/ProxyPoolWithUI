@@ -2,8 +2,7 @@
 
 import os
 import logging
-from flask import Flask
-from flask import jsonify, request, redirect, send_from_directory
+from flask import Flask, jsonify, request, redirect, send_from_directory, session
 from flask_session import Session
 from functools import wraps
 
