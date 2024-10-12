@@ -4,6 +4,7 @@ import os
 import logging
 from flask import Flask
 from flask import jsonify, request, redirect, send_from_directory
+from flask_session import Session
 
 log = logging.getLogger('werkzeug')
 log.disabled = True
@@ -22,6 +23,50 @@ app = Flask(
     static_url_path='/web',
     static_folder=STATIC_FOLDER
 )
+app.secret_key = os.getenv('JWT_TOKEN', 'Nbfdc@2024')
+VALID_TOKEN = os.getenv('WEB_TOKEN', 'nbfdc')
+Session(app)
+############# 登录鉴权 ################
+def require_token(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        # Check session for existing token authorization
+        if session.get('authorized'):
+            return func(*args, **kwargs)
+
+        # Validate token from URL
+        token = request.args.get('token')
+        if token == VALID_TOKEN:
+            session['authorized'] = True
+            return func(*args, **kwargs)
+        else:
+            return redirect(url_for('login'))  # Redirect to login page if not authorized
+    return wrapper
+
+# Login page to input token manually
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        token = request.form.get('token')
+        if token == VALID_TOKEN:
+            session['authorized'] = True
+            return redirect(url_for('page_index'))
+        else:
+            return 'Invalid token. Please try again.', 403
+    return '''
+        <form method="post">
+            <label for="token">Enter Token:</label>
+            <input type="text" name="token" id="token" required>
+            <button type="submit">Login</button>
+        </form>
+    '''
+
+# Logout to clear session
+@app.route('/logout', methods=['GET'])
+def logout():
+    session.pop('authorized', None)
+    return 'Logged out successfully. <a href="/login">Login again</a>'
+
 
 ############# 以下API可用于获取代理 ################
 
@@ -156,19 +201,6 @@ def fetch_all():
 @app.route('/')
 def index():
     return redirect('/web')
-
-VALID_TOKEN = os.getenv('VALID_TOKEN', 'nbfdc')
-
-def require_token(func):
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        token = request.args.get('token')
-        if token == 'nbfdc':
-            return func(*args, **kwargs)
-        else:
-            return jsonify({'success': False, 'error': 'Forbidden ,请输入令牌'}), 400
-    return wrapper
-
 
 # 网页：首页
 @app.route('/web', methods=['GET'])
