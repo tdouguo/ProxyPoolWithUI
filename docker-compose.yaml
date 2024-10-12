@@ -1,0 +1,15 @@
+version: '3'
+
+services:
+  proxypool:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: proxy_pool
+    container_name: proxy_pool
+    volumes:
+      - /home/code/ProxyPoolWithUI:/proxy # 这里是你克隆项目的路径，请自行修改
+    ports:
+      - "5100:5000"
+    restart: unless-stopped
+
