@@ -60,7 +60,7 @@ def login():
             return redirect(url_for('page_index'))
         else:
             return 'Invalid token. Please try again.', 403
-    return send_from_directory(STATIC_FOLDER, 'fetchers/login.html')
+    return send_from_directory(STATIC_FOLDER, 'login.html')
 
 # Logout to clear session
 @app.route('/logout', methods=['GET'])
