@@ -51,7 +51,6 @@ def require_token(func):
             return redirect(url_for('login'))  # Redirect to login page if not authorized
     return wrapper
 
-# Login page to input token manually
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -61,13 +60,7 @@ def login():
             return redirect(url_for('page_index'))
         else:
             return 'Invalid token. Please try again.', 403
-    return '''
-        <form method="post">
-            <label for="token">Enter Token:</label>
-            <input type="text" name="token" id="token" required>
-            <button type="submit">Login</button>
-        </form>
-    '''
+    return send_from_directory(STATIC_FOLDER, 'fetchers/login.html')
 
 # Logout to clear session
 @app.route('/logout', methods=['GET'])
