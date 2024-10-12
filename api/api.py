@@ -2,7 +2,7 @@
 
 import os
 import logging
-from flask import Flask, session, jsonify, request, redirect, send_from_directory, url_for
+from flask import Flask, session, jsonify, request, redirect, send_from_directory, url_for, render_template
 from flask_session import Session
 from functools import wraps
 
@@ -51,7 +51,6 @@ def require_token(func):
             return redirect(url_for('login'))  # Redirect to login page if not authorized
     return wrapper
 
-@app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         token = request.form.get('token')
@@ -60,7 +59,88 @@ def login():
             return redirect(url_for('page_index'))
         else:
             return 'Invalid token. Please try again.', 403
-    return send_from_directory(STATIC_FOLDER, 'login.html')
+    return '''
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Login</title>
+        <style>
+            body {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+                margin: 0;
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+                background-color: #f5f5f7;
+            }
+            .login-container {
+                background: #ffffff;
+                padding: 40px;
+                border-radius: 20px;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                text-align: center;
+                max-width: 400px;
+                width: 100%;
+            }
+            h2 {
+                margin-bottom: 30px;
+                font-weight: 600;
+                color: #333;
+            }
+            label {
+                display: block;
+                margin-bottom: 10px;
+                font-size: 1.1em;
+                color: #555;
+            }
+            input[type="text"] {
+                width: calc(100% - 20px);
+                padding: 10px;
+                margin-bottom: 20px;
+                font-size: 1em;
+                border: 1px solid #ddd;
+                border-radius: 30px;
+                outline: none;
+                transition: border 0.3s;
+            }
+            input[type="text"]:focus {
+                border-color: #007aff;
+            }
+            button {
+                background-color: #007aff;
+                color: #ffffff;
+                padding: 10px 20px;
+                font-size: 1em;
+                border: none;
+                border-radius: 30px;
+                cursor: pointer;
+                transition: background-color 0.3s;
+            }
+            button:hover {
+                background-color: #005bb5;
+            }
+            .form-group {
+                text-align: left;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="login-container">
+            <h2>Login</h2>
+            <form method="post">
+                <div class="form-group">
+                    <label for="token">Enter Token:</label>
+                    <input type="text" name="token" id="token" required>
+                </div>
+                <button type="submit">Login</button>
+            </form>
+        </div>
+    </body>
+    </html>
+    '''
 
 # Logout to clear session
 @app.route('/logout', methods=['GET'])
